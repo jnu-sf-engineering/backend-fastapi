@@ -1,0 +1,16 @@
+version: '3'
+services:
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_DATABASE: jnu-sf
+      MYSQL_USER: jnu-sf-engineering
+      MYSQL_PASSWORD: jnu-sf-engineering
+      MYSQL_ROOT_PASSWORD: jnu-sf-engineering
+    ports:
+      - '3306:3306'
+    volumes:
+      - 'mysqldata:/var/lib/mysql'
+      - './init/schema.sql:/docker-entrypoint-initdb.d/schema.sql'
+volumes:
+  mysqldata:
