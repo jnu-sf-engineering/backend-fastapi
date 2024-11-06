@@ -147,3 +147,20 @@ class InvalidProjectIDFormat(HTTPException):
                 }
             }
         )
+
+
+# 동일한 프로젝트 데이터 검증
+class DuplicateProjectData(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "success": False,
+                "response": None,
+                "error": {
+                    "code": "2006",
+                    "reason": "기존 프로젝트 정보와 동일한 데이터입니다.",
+                    "status": "400"
+                }
+            }
+        )

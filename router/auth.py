@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from pydantic import EmailStr, Field, BaseModel
 from sqlalchemy.orm import Session
 from db.database import get_db
 from passlib.context import CryptContext
 from db.models import User
-from error.exceptions import EmailNotMatch, PasswordNotMatch, UserNotFound, AuthenticationFailed
+from error.exceptions import EmailNotMatch, PasswordNotMatch, UserNotFound
 
 # 인증 라우터
 router = APIRouter(prefix="/v1/auth", tags=["인증"])
