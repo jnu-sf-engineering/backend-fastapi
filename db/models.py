@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, BigInteger
+from sqlalchemy import Column, String, DateTime, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.ext.declarative import declarative_base
 from db.database import engine
 
@@ -23,7 +24,7 @@ class Project(Base):
     USER_ID = Column(BigInteger, ForeignKey("USER.USER_ID"), nullable=False)
     PROJECT_NAME = Column(String(255), nullable=False)
     # SPRINT_COUNT DB 데이터 타입은 tinyint : 0 ~ 128
-    SPRINT_COUNT = Column(Integer, nullable=True)
+    SPRINT_COUNT = Column(TINYINT(display_width=1), nullable=True)
     MANAGER = Column(String(255), nullable=False)
 
     user = relationship("User", back_populates="projects")
@@ -75,7 +76,6 @@ class Retrospect(Base):
     RETRO_ID = Column(BigInteger, primary_key=True, autoincrement=True)
     SPRINT_ID = Column(BigInteger, ForeignKey("SPRINT.SPRINT_ID"), nullable=False)
     SUMMARY = Column(String(255), nullable=False)
-
     sprint = relationship("Sprint", back_populates="retrospects")
     kpt = relationship("KPT", uselist=False, back_populates="retrospect")
     four_ls = relationship("FourLs", uselist=False, back_populates="retrospect")

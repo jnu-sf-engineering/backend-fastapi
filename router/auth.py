@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from pydantic import EmailStr, Field, BaseModel
 from sqlalchemy.orm import Session
 from db.database import get_db
 from passlib.context import CryptContext
 from db.models import User
+from error.exceptions import EmailNotMatch, PasswordNotMatch, UserNotFound
 
 # 인증 라우터
-router = APIRouter(prefix="/v1/auth", tags=["auth"])
+router = APIRouter(prefix="/v1/auth", tags=["인증"])
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -46,10 +47,7 @@ async def register_user(request: RegisterRequest, db: Session = Depends(get_db))
     # 중복 이메일 체크
     existed_user = db.query(User).filter(User.EMAIL == request.email).first()
     if existed_user:
-        raise HTTPException(
-            status_code = status.HTTP_400_BAD_REQUEST,
-            detail="해당 이메일이 이미 존재합니다."
-        )
+        raise EmailNotMatch()
     
     # 비밀번호 해시 및 사용자 생성
     hashed_password = get_hashed_password(request.password)
@@ -74,18 +72,13 @@ async def register_user(request: RegisterRequest, db: Session = Depends(get_db))
 @router.post("/login")
 async def login_user(request: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.EMAIL == request.email).first()
+    # 유저 존재 유무 확인
     if not user:
-        raise HTTPException(
-            status_code = status.HTTP_400_BAD_REQUEST,
-            detail="유효하지 않은 이메일 혹은 비밀번호입니다."
-        )
+        raise UserNotFound()
     
     # 비밀번호 검증
     if not verify_password(request.password, user.PASSWORD):
-        raise HTTPException(
-            status_code = status.HTTP_400_BAD_REQUEST,
-            detail = "유효하지 않은 이메일 혹은 비밀번호입니다."
-        )
+        raise PasswordNotMatch()
     
     # 로그인 성공: user_id 반환
     response = {
