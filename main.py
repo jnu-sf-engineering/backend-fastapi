@@ -1,6 +1,11 @@
 from fastapi import FastAPI, status
+from router import auth
+
 
 app = FastAPI()
+
+# 인증 라우터
+app.include_router(auth.router)
 
 
 # API Server Test
