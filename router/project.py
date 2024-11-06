@@ -3,6 +3,10 @@ from pydantic import EmailStr, Field, BaseModel
 from sqlalchemy.orm import Session
 from db.database import get_db
 from db.models import Project
+from error.exceptions import (
+    UserIDMissing, MissingFieldData, DuplicateProjectName,
+    ProjectNotFound, InvalidProjectIDFormat
+)
 
 # 프로젝트 라우터
 router = APIRouter(prefix="/v1/project", tags=["프로젝트"])
@@ -16,13 +20,6 @@ class ProjectRequest(BaseModel):
 class ProjectListRequest(BaseModel):
     user_id: int
 
-# 프로젝트 응답 검증
-class ProjectListResponse(BaseModel):
-    project_id: int
-    project_name: str
-    sprint_count: int
-    manager: str
-
 
 # 프로젝트 목록 조회
 @router.get("/", response_model=dict)
@@ -33,9 +30,9 @@ async def get_projects(request: ProjectListRequest, db: Session = Depends(get_db
 
     # 프로젝트 존재 하지 않을 경우 로직
     if not projects:
-        return {"success": False, "response": [], "error": "No projects found for this user."}
+        raise UserIDMissing()
     
-    
+    # 반환값 구성
     response = [
         {
             "project_id": project.PROJECT_ID,
@@ -59,6 +56,15 @@ async def get_projects(request: ProjectListRequest, db: Session = Depends(get_db
 @router.post("/", response_model=dict)
 async def create_project(request: ProjectRequest, db: Session = Depends(get_db)):
     
+    # 프로젝트 생성 시 필드 누락 검증
+    if not request.project_name or not request.manager:
+        raise MissingFieldData(['project_name', "manager"])
+    
+    # 프로젝트명 중복 확인
+    duplcate_project = db.query(Project).filter(Project.PROJECT_NAME == request.project_name).first()
+    if duplcate_project:
+        raise DuplicateProjectName()
+
     # 프로젝트 생성 후 데이터베이스 적재
     new_project = Project(
         PROJECT_NAME=request.project_name,
@@ -86,10 +92,11 @@ async def update_project(project_id: int, request: ProjectRequest, db: Session =
     
     # path parameter에 해당하는 프로젝트 조회
     project = db.query(Project).filter(Project.PROJECT_ID == project_id).first()
-    
+
     # 해당하는 프로젝트 존재 하지 않을 경우 로직
     if not project:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+        raise ProjectNotFound()
+    
     
     # 프로젝트 정보 수정 후 업데이트
     project.PROJECT_NAME = request.project_name
@@ -118,7 +125,7 @@ async def delete_project(project_id: int, db: Session = Depends(get_db)):
 
     # 해당하는 프로젝트 존재 하지 않을 경우 로직
     if not project:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+        raise ProjectNotFound()
     
     # 프로젝트 정보 삭제 
     db.delete(project)

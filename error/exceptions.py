@@ -100,7 +100,7 @@ class MissingFieldData(HTTPException):
         )
 
 # 프로젝트명 중복 확인
-class DuplicateProjectNameException(HTTPException):
+class DuplicateProjectName(HTTPException):
     def __init__(self):
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
