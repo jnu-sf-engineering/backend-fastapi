@@ -1,27 +1,17 @@
 ---
 name: "\U0001F39F️-ticket"
-about: Describe this issue template's purpose here.
-title: ''
-labels: ''
+about: Sprint Backlog
+title: "#<epic-number> -"
+labels: ticket
 assignees: ''
 
 ---
 
----
-name: "\U0001F3AA Epic"
-about: Product Backlog
-title: ''
-labels: epic
-assignees: ''
-
----
+<!--연관된 에픽 번호를 작성하세요. 예) #111-->
+### 🎪 Related Epic: #<epic-number>
 
 ## ✏️ Description
 <!--설명을 작성하세요.-->
-
-## 🎟️ Tickets
-<!--기능을 작성하세요.-->
-- 
 
 ## Etc.
 <!--기타-->

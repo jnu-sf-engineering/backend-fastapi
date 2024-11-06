@@ -1,14 +1,5 @@
 ---
 name: "\U0001F41Ebug.md"
-about: Describe this issue template's purpose here.
-title: ''
-labels: ''
-assignees: ''
-
----
-
----
-name: "\U0001F41EBug"
 about: Create a report to help us improve
 title: "[BUG#<ticket-number>]"
 labels: bug
