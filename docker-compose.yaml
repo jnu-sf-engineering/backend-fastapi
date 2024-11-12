@@ -1,0 +1,27 @@
+services:
+  fastapi:
+    image: kyeong6/fastapi_app:latest
+    container_name: fastapi
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.dev
+    depends_on:
+      - db  
+    restart: always  
+
+  db:
+    image: kyeong6/mysql_app:latest
+    environment:
+      MYSQL_DATABASE: jnu-sf
+      MYSQL_USER: jnu-sf-engineering
+      MYSQL_PASSWORD: jnu-sf-engineering
+      MYSQL_ROOT_PASSWORD: jnu-sf-engineering
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysqldata:/var/lib/mysql
+    restart: always
+
+volumes:
+  mysqldata:
