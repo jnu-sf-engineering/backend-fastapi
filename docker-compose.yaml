@@ -8,7 +8,8 @@ services:
       - .env.dev
     depends_on:
       - db  
-    restart: always  
+    network_mode: "host"
+    restart: always
 
   db:
     image: kyeong6/mysql_app:latest
