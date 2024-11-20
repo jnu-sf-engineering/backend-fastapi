@@ -2,16 +2,12 @@
 from dotenv import load_dotenv
 import os
 
-# APP_ENV 환경 변수에 따라 개발 / 운영 환경 설정
-"""
-개발 환경 : export APP_ENV=dev
-운영 환경 : export APP_ENV=prod
-"""
-env_file = f".env.{os.getenv('APP_ENV', 'dev')}"
-
-load_dotenv(dotenv_path=env_file)
+load_dotenv()
 
 class Settings:
+
+    # JWT
+    SECRET_KEY = os.getenv("SECRET_KEY")
 
     # MySQL
     RDS_DATABASE_ENDPOINT = os.getenv("RDS_DATABASE_ENDPOINT")

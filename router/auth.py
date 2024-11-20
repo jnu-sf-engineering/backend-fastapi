@@ -1,3 +1,6 @@
+import jwt
+from datetime import datetime, timedelta
+from pytz import timezone
 from fastapi import APIRouter, Depends, status
 from pydantic import EmailStr, Field, BaseModel
 from sqlalchemy.orm import Session
@@ -5,12 +8,21 @@ from db.database import get_db
 from passlib.context import CryptContext
 from db.models import User
 from error.exceptions import EmailNotMatch, PasswordNotMatch, UserNotFound
+from core.config import settings
 
 # 인증 라우터
 router = APIRouter(prefix="/v1/auth", tags=["인증"])
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# JWT 설정
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
+
+# 토큰 요청 검증
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
 # 회원가입 요청 검증
 class RegisterRequest(BaseModel):
@@ -38,6 +50,17 @@ def verify_password(password: str, hashed_password: str):
     verified_password = pwd_context.verify(password, hashed_password)
 
     return verified_password
+
+# 액세스 토큰 생성 함수
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone('Asia/Seoul')) + expires_delta
+    else:
+        expire = datetime.now(timezone('Asia/Seoul')) + timedelta(minute=15)
+    to_encode.update({'exp': expire})
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 
 # 회원가입
@@ -80,11 +103,22 @@ async def login_user(request: LoginRequest, db: Session = Depends(get_db)):
     if not verify_password(request.password, user.PASSWORD):
         raise PasswordNotMatch()
     
-    # 로그인 성공: user_id 반환
+    # JWT 토큰 생성
+    access_token = create_access_token(
+        # jwt 토큰에 user_id 포함
+        data={"user_id": user.USER_ID},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    
+    # 이메일에서 '@' 앞부분만 추출
+    user_name = user.EMAIL.split('@')[0]
+
+    # 로그인 성공
     response = {
         "success": True,
         "response": {
-            "user_id": user.USER_ID
+            "accessToken": access_token,
+            "userID": user_name
         },
         "error": None
     }

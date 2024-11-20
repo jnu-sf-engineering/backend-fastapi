@@ -1,8 +1,17 @@
 from fastapi import FastAPI, status
-from router import auth, project, retrospects, templates
-
+from fastapi.middleware.cors import CORSMiddleware
+from router import auth, project
 
 app = FastAPI()
+
+# CORS 설정
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],  
+    allow_headers=["*"],  
+)
 
 # 인증 라우터
 app.include_router(auth.router)
@@ -10,11 +19,6 @@ app.include_router(auth.router)
 # 프로젝트 라우터
 app.include_router(project.router)
 
-# 회고 라우터
-app.include_router(retrospects.router)
-
-# 탬플릿 라우터
-app.include_router(templates.router)
 
 
 # API Server Test
