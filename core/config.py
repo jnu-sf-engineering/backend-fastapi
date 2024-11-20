@@ -6,6 +6,9 @@ load_dotenv()
 
 class Settings:
 
+    # JWT
+    SECRET_KEY = os.getenv("SECRET_KEY")
+
     # MySQL
     RDS_DATABASE_ENDPOINT = os.getenv("RDS_DATABASE_ENDPOINT")
     RDS_DATABASE_USERNAME = os.getenv("RDS_DATABASE_USERNAME")
