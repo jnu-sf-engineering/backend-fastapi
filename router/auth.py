@@ -1,5 +1,6 @@
 import jwt
 from datetime import datetime, timedelta
+from typing import Optional
 from pytz import timezone
 from fastapi import APIRouter, Depends, status
 from pydantic import EmailStr, Field, BaseModel
@@ -27,7 +28,8 @@ class Token(BaseModel):
 # 회원가입 요청 검증
 class RegisterRequest(BaseModel):
     email: EmailStr
-    password: str = Field(..., min_length=8, max_length=30)
+    password: str = Field(..., min_length=2, max_length=30)
+    nickname: str = Field(..., min_length=2, max_length=20)
 
 # 로그인 요청 검증
 class LoginRequest(BaseModel):
@@ -52,15 +54,14 @@ def verify_password(password: str, hashed_password: str):
     return verified_password
 
 # 액세스 토큰 생성 함수
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone('Asia/Seoul')) + expires_delta
-    else:
-        expire = datetime.now(timezone('Asia/Seoul')) + timedelta(minute=15)
-    to_encode.update({'exp': expire})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    # 만료 시간 설정
+    expire = datetime.now(timezone('Asia/Seoul')) + (expires_delta or timedelta(minutes=15))
+    to_encode.update({"exp": expire})
+    # JWT 생성
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
 
 
 # 회원가입
@@ -74,7 +75,10 @@ async def register_user(request: RegisterRequest, db: Session = Depends(get_db))
     
     # 비밀번호 해시 및 사용자 생성
     hashed_password = get_hashed_password(request.password)
-    new_user = User(EMAIL=request.email, PASSWORD=hashed_password)
+    new_user = User(
+        EMAIL=request.email,
+        PASSWORD=hashed_password,
+        NICKNAME=request.nickname)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -109,16 +113,13 @@ async def login_user(request: LoginRequest, db: Session = Depends(get_db)):
         data={"user_id": user.USER_ID},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    
-    # 이메일에서 '@' 앞부분만 추출
-    user_name = user.EMAIL.split('@')[0]
 
     # 로그인 성공
     response = {
         "success": True,
         "response": {
             "accessToken": access_token,
-            "userID": user_name
+            "userID": user.NICKNAME
         },
         "error": None
     }

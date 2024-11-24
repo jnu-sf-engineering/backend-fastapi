@@ -1,29 +1,39 @@
 services:
-  fastapi:
-    image: kyeong6/fastapi_app:latest
-    container_name: fastapi
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env.dev
-    depends_on:
-      - db  
-    network_mode: "host"
-    restart: always
-
   db:
-    image: kyeong6/mysql_app:latest
+    image: mysql:8.0.30
+    restart: always
+    container_name: database
+    env_file:
+      - .env
     environment:
-      MYSQL_DATABASE: jnu-sf
-      MYSQL_USER: jnu-sf-engineering
-      MYSQL_PASSWORD: jnu-sf-engineering
-      MYSQL_ROOT_PASSWORD: jnu-sf-engineering
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - '3306:3306'
     volumes:
       - mysqldata:/var/lib/mysql
       - './schema.sql:/docker-entrypoint-initdb.d/schema.sql'
+    networks:
+      - fastapi-network
     restart: always
+
+  fastapi:
+    image: kyeong6/fastapi_app:latest
+    container_name: fastapi
+    ports:
+      - "8000:8000"
+    networks:
+      - fastapi-network
+    env_file:
+      - .env
+    restart: always
+    depends_on:
+      - db
 
 volumes:
   mysqldata:
+
+networks:
+  fastapi-network:
+    driver: bridge

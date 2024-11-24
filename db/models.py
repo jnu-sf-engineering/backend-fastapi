@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, BigInteger
+from sqlalchemy import Column, String, DateTime, ForeignKey, BigInteger, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.ext.declarative import declarative_base
@@ -13,6 +13,7 @@ class User(Base):
     USER_ID = Column(BigInteger, primary_key=True, autoincrement=True)
     EMAIL = Column(String(255), nullable=False, unique=True)
     PASSWORD = Column(String(255), nullable=False)
+    NICKNAME = Column(String(255), nullable=False)
 
     projects = relationship("Project", back_populates="user")
 
@@ -65,7 +66,7 @@ class Card(Base):
     SPRINT_ID = Column(BigInteger, ForeignKey("SPRINT.SPRINT_ID"), nullable=False)
     CARD_CONTENT = Column(String(255), nullable=False)
     CARD_PARTICIPANTS = Column(String(255), nullable=False)
-    CARD_STATUS = Column(String(255), nullable=False)
+    CARD_STATUS = Column(Integer, nullable=False)
 
     sprint = relationship("Sprint", back_populates="cards")
 
