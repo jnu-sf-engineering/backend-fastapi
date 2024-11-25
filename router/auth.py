@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from pytz import timezone
 from fastapi import APIRouter, Depends, status
-from pydantic import EmailStr, Field, BaseModel
+from pydantic import EmailStr, BaseModel
 from sqlalchemy.orm import Session
 from db.database import get_db
 from passlib.context import CryptContext
@@ -28,8 +28,8 @@ class Token(BaseModel):
 # 회원가입 요청 검증
 class RegisterRequest(BaseModel):
     email: EmailStr
-    password: str = Field(..., min_length=2, max_length=30)
-    nickname: str = Field(..., min_length=2, max_length=20)
+    password: str 
+    nickname: str 
 
 # 로그인 요청 검증
 class LoginRequest(BaseModel):
@@ -78,11 +78,12 @@ async def register_user(request: RegisterRequest, db: Session = Depends(get_db))
     new_user = User(
         EMAIL=request.email,
         PASSWORD=hashed_password,
-        NICKNAME=request.nickname)
+        NICKNAME=request.nickname
+        )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-
+    
     # 회원가입 성공
     response = {
         "success": True,
