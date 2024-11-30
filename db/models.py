@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, BigInteger
+from sqlalchemy import Column, String, DateTime, ForeignKey, BigInteger, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.ext.declarative import declarative_base
@@ -13,6 +13,7 @@ class User(Base):
     USER_ID = Column(BigInteger, primary_key=True, autoincrement=True)
     EMAIL = Column(String(255), nullable=False, unique=True)
     PASSWORD = Column(String(255), nullable=False)
+    NICKNAME = Column(String(255), nullable=False)
 
     projects = relationship("Project", back_populates="user")
 
@@ -29,6 +30,7 @@ class Project(Base):
 
     user = relationship("User", back_populates="projects")
     sprints = relationship("Sprint", back_populates="project")
+    summaries = relationship("Summary", back_populates="project")
 
 # SUMMARY 테이블 구성
 class Summary(Base):
@@ -40,8 +42,6 @@ class Summary(Base):
     LAST_UPDATED = Column(DateTime(6), nullable=False)
 
     project = relationship("Project", back_populates="summaries")
-
-Project.summaries = relationship("Summary", back_populates="project")
 
 # SPRINT 테이블 구성
 class Sprint(Base):
@@ -65,7 +65,7 @@ class Card(Base):
     SPRINT_ID = Column(BigInteger, ForeignKey("SPRINT.SPRINT_ID"), nullable=False)
     CARD_CONTENT = Column(String(255), nullable=False)
     CARD_PARTICIPANTS = Column(String(255), nullable=False)
-    CARD_STATUS = Column(String(255), nullable=False)
+    CARD_STATUS = Column(Integer, nullable=False)
 
     sprint = relationship("Sprint", back_populates="cards")
 
