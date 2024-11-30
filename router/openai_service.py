@@ -14,6 +14,21 @@ client = OpenAI(api_key = settings.OPENAI_API_KEY)
 
 def field_advice(temp_name: str, field_name: str, field_value: str):
     try:
+        # 조언을 받을 필드만 허용
+        valid_advice_fields = {
+            "KPT": ["problem"],
+            "CSS": ["stop"],
+            "FOUR_LS": ["lacked"]
+        }
+
+        # 템플릿이 유효한지 확인
+        if temp_name not in valid_advice_fields:
+            return "Invalid template name. Advice not available for this template."
+
+        # 필드가 유효한지 확인
+        if field_name not in valid_advice_fields[temp_name]:
+            return f"Advice is not provided for the '{field_name}' field in the '{temp_name}' template."
+
         # 템플릿별 가이드
         template_guides = {
             "KPT": (
