@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from db.database import get_db
 from db.models import Retrospect, KPT, CSS, FourLs, Sprint, Project
 from router.token_decode import get_user_id_from_token
+from openai_service import field_advice
 
 # 회고록 라우터
 router = APIRouter(prefix="/v1/retrospects", tags=["회고록"])
@@ -33,6 +34,13 @@ class RetroRequest(BaseModel):
     retroId: int
     tempName: str
     answer: Union[KPTAnswer, CSSAnswer, FourLSAnswer]
+
+
+# 조언 요청 모델
+class AdviceRequest(BaseModel):
+    tempName: str
+    fieldName: str
+    fieldValue: Optional[str] = None  
 
 
 # Retrospect 소유권 확인 로직
@@ -124,4 +132,50 @@ async def update_retrospect(
         "error": None
     }
 
+    return response
+
+
+@router.post("/advice", response_model=dict)
+async def get_advice(request: AdviceRequest):
+    # 템플릿 유효성 검증
+    valid_templates = {
+        "KPT": ["keep", "problem", "try"],
+        "CSS": ["continue", "stop", "start"],
+        "FOUR_LS": ["liked", "learned", "lacked", "loggedFor"]
+    }
+    if request.tempName not in valid_templates:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid template name"
+        )
+
+    if request.fieldName not in valid_templates[request.tempName]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid field name for {request.tempName} template"
+        )
+    
+    # fieldValue 유효성 검증
+    if not request.fieldValue or request.fieldValue.strip() == "":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="fieldValue cannot be empty"
+        )
+
+    # ChatGPT 조언
+    advice = field_advice(request.tempName, request.fieldName, request.fieldValue)
+    if not advice:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to generate advcie from OpenAI"
+        )
+
+    response = {
+        "success": True,
+        "response": {
+            "advice": advice
+            }, 
+        "error": None
+    }
+    
     return response

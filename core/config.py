@@ -9,6 +9,9 @@ class Settings:
     # JWT
     SECRET_KEY = os.getenv("SECRET_KEY")
 
+    # OpenAI
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
     # MySQL
     RDS_DATABASE_ENDPOINT = os.getenv("RDS_DATABASE_ENDPOINT")
     RDS_DATABASE_USERNAME = os.getenv("RDS_DATABASE_USERNAME")
