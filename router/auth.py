@@ -59,12 +59,13 @@ def verify_password(password: str, hashed_password: str):
     return verified_password
 
 # 액세스 토큰 생성 함수
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict) -> str:
     
     to_encode = data.copy()
-    # 만료 시간 설정
-    expire = datetime.now(timezone('Asia/Seoul')) + (expires_delta or timedelta(minutes=15))
-    to_encode.update({"exp": expire})
+    
+    # # 만료 시간 설정
+    # expire = datetime.now(timezone('Asia/Seoul')) + (expires_delta or timedelta(minutes=15))
+    # to_encode.update({"exp": expire})
     
     # Base64 디코딩된 Secret Key 사용
     secret_key = get_decoded_secret_key()
