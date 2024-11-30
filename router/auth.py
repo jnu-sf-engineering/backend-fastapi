@@ -1,4 +1,5 @@
 import jwt
+import base64
 from datetime import datetime, timedelta
 from typing import Optional
 from pytz import timezone
@@ -19,6 +20,10 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # JWT 설정
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
+
+# Base64로 인코딩된 Secret Key를 디코딩
+def get_decoded_secret_key() -> str:
+    return base64.urlsafe_b64decode(settings.SECRET_KEY)
 
 # 토큰 요청 검증
 class Token(BaseModel):
@@ -60,8 +65,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     # 만료 시간 설정
     expire = datetime.now(timezone('Asia/Seoul')) + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expire})
+    
+    # Base64 디코딩된 Secret Key 사용
+    secret_key = get_decoded_secret_key()
     # JWT 생성
-    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, secret_key, algorithm=ALGORITHM)
 
 
 # 회원가입
