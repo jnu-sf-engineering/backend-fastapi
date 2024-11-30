@@ -30,6 +30,7 @@ class Project(Base):
 
     user = relationship("User", back_populates="projects")
     sprints = relationship("Sprint", back_populates="project")
+    summaries = relationship("Summary", back_populates="project")
 
 # SUMMARY 테이블 구성
 class Summary(Base):
@@ -41,8 +42,6 @@ class Summary(Base):
     LAST_UPDATED = Column(DateTime(6), nullable=False)
 
     project = relationship("Project", back_populates="summaries")
-
-Project.summaries = relationship("Summary", back_populates="project")
 
 # SPRINT 테이블 구성
 class Sprint(Base):

@@ -1,8 +1,5 @@
 import jwt
 import base64
-from datetime import datetime, timedelta
-from typing import Optional
-from pytz import timezone
 from fastapi import APIRouter, Depends, status
 from pydantic import EmailStr, BaseModel
 from sqlalchemy.orm import Session
@@ -121,7 +118,7 @@ async def login_user(request: LoginRequest, db: Session = Depends(get_db)):
     access_token = create_access_token(
         # jwt 토큰에 user_id 포함
         data={"user_id": user.USER_ID},
-        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        # expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
     # 로그인 성공

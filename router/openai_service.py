@@ -1,5 +1,7 @@
 from openai import OpenAI
 from core.config import settings
+from typing import List, Optional
+
 
 # 모델 이름
 MODEL_NAME = "gpt-3.5-turbo"
@@ -7,11 +9,7 @@ MODEL_NAME = "gpt-3.5-turbo"
 # Chatgpt API 사용
 client = OpenAI(api_key = settings.OPENAI_API_KEY)
 
-
 # 회고 필드 조언
-# 개별 스프린트 회고 요약
-# 종합 스프린트 회고 요약
-
 def field_advice(temp_name: str, field_name: str, field_value: str):
     try:
         # 조언을 받을 필드만 허용
@@ -75,7 +73,7 @@ def field_advice(temp_name: str, field_name: str, field_value: str):
         ]
 
         # OpenAI API 호출
-        response = OpenAI.chat.completions.create(
+        response = client.chat.completions.create(
             model=MODEL_NAME,
             messages=messages,
             temperature=0
@@ -85,4 +83,87 @@ def field_advice(temp_name: str, field_name: str, field_value: str):
     
     except Exception as e:
         print(f"filed_advice 에러: {e}")
+        return None
+
+
+# 개별 스프린트 회고 요약
+def summarize_sprint_content(temp_name: str, contents: dict):
+    try:
+        # 템플릿 설명
+        template_descriptions = {
+            "KPT": "Keep(유지할 점), Problem(개선할 점), Try(시도할 점)",
+            "CSS": "Continue(계속할 점), Stop(중단할 점), Start(시작할 점)",
+            "FOUR_LS": "Liked(좋았던 점), Learned(배운 점), Lacked(부족했던 점), LoggedFor(앞으로 참고할 점)"
+        }
+        template_description = template_descriptions.get(temp_name, "")
+
+        # 사용자 입력 데이터 준비
+        formatted_content = "\n".join([f"{field}: {value}" for field, value in contents.items() if value])
+
+        # 프롬프트 작성
+        prompt = (
+            f"다음은 '{temp_name}' 템플릿을 기반으로 작성된 스프린트 회고 내용입니다:\n"
+            f"{formatted_content}\n\n"
+            f"템플릿 설명: {template_description}\n\n"
+            "이 회고 내용을 바탕으로 요약을 작성해주세요. "
+            "요약은 간결하고 중요한 점을 포함해주세요."
+        )
+
+        # OpenAI 메시지 구성
+        messages = [
+            {"role": "system", "content": "assistant는 사용자 회고 내용을 요약합니다."},
+            {"role": "user", "content": prompt},
+        ]
+        print(settings.OPENAI_API_KEY)
+        # OpenAI API 호출
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=messages,
+            temperature=0
+        )
+
+        summary = response.choices[0].message.content
+        return summary
+    
+    except Exception as e:
+        print(f"summarize_sprint_content 에러: {e}")
+        return None
+
+
+# 종합 스프린트 회고 요약
+def summarize_project_retrospects(summaries: List[str]):
+    try: 
+        if not summaries:
+            # 회고 내용 x
+            return None
+        
+        # OpenAI 요청을 위한 데이터 준비
+        combined_text = "\n\n".join(summaries)
+
+        # 프롬프트 작성
+        prompt = (
+            "다음은 특정 프로젝트의 각 스프린트에 작성된 회고 요약 내용입니다:\n"
+            f"{combined_text}\n\n"
+            "이 모든 회고 내용을 바탕으로 프로젝트 전체를 요약해주세요. "
+            "요약은 3~5문장으로 간결하고 중요한 점만 포함해주세요."
+        )
+
+        # OpenAI 메시지 구성
+        messages = [
+            {"role": "system", "content": "assistant는 프로젝트 전체 회고 내용을 요약합니다."},
+            {"role": "user", "content": prompt},
+        ]
+
+        # OpenAI API 호출
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=messages,
+            temperature=0
+        )
+
+        summary = response.choices[0].message.content
+        return summary
+    
+    except Exception as e:
+        print(f"summarize_projet_retrospects 에러: {e}")
         return None

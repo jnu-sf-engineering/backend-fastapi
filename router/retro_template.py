@@ -36,28 +36,25 @@ async def select_template(
             detail="Sprint not found"
         )
     
-    # Retrospect 생성(Summary는 업데이트 예정)
+    # Retrospect 생성 및 커밋
     retrospect = Retrospect(SPRINT_ID=request.sprintId, SUMMARY="")
     db.add(retrospect)
-    db.commit()
+    db.commit()  
     db.refresh(retrospect)
+    
 
     # 템플릿 유형에 따라 처리
-    if request.tempName == "KPT":
-        kpt = KPT(RETRO_ID=retrospect.RETRO_ID, KEEP="", PROBLEM="", TRY="")
-        db.add(kpt)
-    elif request.tempName == "FOUR_LS":
-        four_ls = FourLs(RETRO_ID=retrospect.RETRO_ID, LIKED="", LEARNED="", LACKED="", LOGGED_FOR="")
-        db.add(four_ls)
-    elif request.tempName == "CSS":
-        css = CSS(RETRO_ID=retrospect.RETRO_ID, CSS_CONTINUE="", CSS_STOP="", CSS_START="")
-        db.add(css)
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid template name"
-        )
+    template_map = {
+        "KPT": KPT,
+        "FOUR_LS": FourLs,
+        "CSS": CSS
+    }
+    TemplateModel = template_map.get(request.tempName)
+    if not TemplateModel:
+        raise HTTPException(status_code=400, detail="Invalid template name")
 
+    template_data = TemplateModel(RETRO_ID=retrospect.RETRO_ID)
+    db.add(template_data)
     db.commit()
 
     response = {
