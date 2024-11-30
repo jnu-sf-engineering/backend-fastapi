@@ -1,6 +1,6 @@
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
-from router import auth, project
+from router import auth, project, retro_template, retrospect
 
 app = FastAPI()
 
@@ -18,6 +18,12 @@ app.include_router(auth.router)
 
 # 프로젝트 라우터
 app.include_router(project.router)
+
+# 회고록 템플릿 라우터
+app.include_router(retro_template.router)
+
+# 회고록 라우터
+app.include_router(retrospect.router)
 
 
 

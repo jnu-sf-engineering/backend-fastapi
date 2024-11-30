@@ -1,8 +1,5 @@
 import jwt
 import base64
-from datetime import datetime, timedelta
-from typing import Optional
-from pytz import timezone
 from fastapi import APIRouter, Depends, status
 from pydantic import EmailStr, BaseModel
 from sqlalchemy.orm import Session
@@ -59,12 +56,13 @@ def verify_password(password: str, hashed_password: str):
     return verified_password
 
 # 액세스 토큰 생성 함수
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict) -> str:
     
     to_encode = data.copy()
-    # 만료 시간 설정
-    expire = datetime.now(timezone('Asia/Seoul')) + (expires_delta or timedelta(minutes=15))
-    to_encode.update({"exp": expire})
+    
+    # # 만료 시간 설정
+    # expire = datetime.now(timezone('Asia/Seoul')) + (expires_delta or timedelta(minutes=15))
+    # to_encode.update({"exp": expire})
     
     # Base64 디코딩된 Secret Key 사용
     secret_key = get_decoded_secret_key()
@@ -120,7 +118,7 @@ async def login_user(request: LoginRequest, db: Session = Depends(get_db)):
     access_token = create_access_token(
         # jwt 토큰에 user_id 포함
         data={"user_id": user.USER_ID},
-        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        # expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
     # 로그인 성공
