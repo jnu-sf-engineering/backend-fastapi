@@ -1,13 +1,43 @@
-from openai import OpenAI
+import openai
+from typing import List, Dict
+from dotenv import load_dotenv
+import os
+import logging
+
 from core.config import settings
-from typing import List, Optional
 
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# 모델 이름
+# 환경변수 로드
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY가 설정되지 않았습니다.")
+
+openai.api_key = OPENAI_API_KEY
 MODEL_NAME = "gpt-3.5-turbo"
 
-# Chatgpt API 사용
-client = OpenAI(api_key = settings.OPENAI_API_KEY)
+
+# OpenAI 호출 유틸리티 함수
+def call_openai_chat(model: str, messages: List[Dict], temperature: float = 0) -> str:
+    try:
+        response = openai.ChatCompletion.create(
+            model=model,
+            messages=messages,
+            temperature=temperature
+        )
+        # 응답에서 message.content 반환
+        if 'choices' in response and len(response['choices']) > 0:
+            return response['choices'][0]['message']['content']
+        else:
+            logger.error("OpenAI 응답에 'choices'가 없음")
+            return "응답에 문제가 발생했습니다."
+    except Exception as e:
+        logger.error(f"OpenAI 호출 에러: {e}")
+        return "OpenAI 요청 중 오류가 발생했습니다."
+
 
 # 회고 필드 조언
 def field_advice(temp_name: str, field_name: str, field_value: str):
@@ -59,28 +89,33 @@ def field_advice(temp_name: str, field_name: str, field_value: str):
             "사용자는 템플릿의 특정 필드에 대한 회고 내용을 작성하고, 중간에 네 조언을 요청할 거야. "
             "너는 사용자가 효과적으로 회고를 진행할 수 있도록 실행 가능하고 건설적인 조언을 제공해야 해."
         )
-        
+
         # 사용자 입력 기반 프롬프트
         prompt = (
             f"사용자는 '{temp_name}' 템플릿의 '{field_name}' 필드에 대해 다음과 같이 작성했어:\n"
             f"'{field_value}'\n\n"
             "효과적인 회고를 위해 이 작성 내용을 개선하거나 보완할 수 있는 조언을 제공해줘."
         )
-        
+
         messages = [
             {"role": "system", "content": system_instruction},
             {"role": "user", "content": prompt},
         ]
 
         # OpenAI API 호출
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model=MODEL_NAME,
             messages=messages,
             temperature=0
         )
-        advice = response.choices[0].message.content
-        return advice
-    
+        # 응답에서 message.content 반환
+        if 'choices' in response and len(response['choices']) > 0:
+            advice = response['choices'][0]['message']['content']
+            return advice
+        else:
+            logger.error("OpenAI 응답에 'choices'가 없음")
+            return "OpenAI 요청 중 오류가 발생했습니다."
+
     except Exception as e:
         print(f"filed_advice 에러: {e}")
         return None
@@ -116,15 +151,20 @@ def summarize_sprint_content(temp_name: str, contents: dict):
         ]
         print(settings.OPENAI_API_KEY)
         # OpenAI API 호출
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model=MODEL_NAME,
             messages=messages,
             temperature=0
         )
 
-        summary = response.choices[0].message.content
-        return summary
-    
+        # 응답에서 message.content 반환
+        if 'choices' in response and len(response['choices']) > 0:
+            summary = response['choices'][0]['message']['content']
+            return summary
+        else:
+            logger.error("OpenAI 응답에 'choices'가 없음")
+            return "OpenAI 요청 중 오류가 발생했습니다."
+
     except Exception as e:
         print(f"summarize_sprint_content 에러: {e}")
         return None
@@ -132,11 +172,11 @@ def summarize_sprint_content(temp_name: str, contents: dict):
 
 # 종합 스프린트 회고 요약
 def summarize_project_retrospects(summaries: List[str]):
-    try: 
+    try:
         if not summaries:
             # 회고 내용 x
             return None
-        
+
         # OpenAI 요청을 위한 데이터 준비
         combined_text = "\n\n".join(summaries)
 
@@ -155,15 +195,21 @@ def summarize_project_retrospects(summaries: List[str]):
         ]
 
         # OpenAI API 호출
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model=MODEL_NAME,
             messages=messages,
             temperature=0
         )
 
-        summary = response.choices[0].message.content
-        return summary
-    
+        # 응답에서 message.content 반환
+        if 'choices' in response and len(response['choices']) > 0:
+            summary = response['choices'][0]['message']['content']
+            return summary
+        else:
+            logger.error("OpenAI 응답에 'choices'가 없음")
+            return "OpenAI 요청 중 오류가 발생했습니다."
+
     except Exception as e:
         print(f"summarize_projet_retrospects 에러: {e}")
         return None
+
