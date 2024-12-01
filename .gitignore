@@ -189,4 +189,9 @@ pyrightconfig.json
 .env.dev
 .env.prod
 
+# Ignore IDE settings
+.idea/
+
+
+
 # End of https://www.toptal.com/developers/gitignore/api/python,dotenv,jupyternotebooks
