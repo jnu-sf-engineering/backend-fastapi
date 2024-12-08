@@ -11,7 +11,7 @@ jobs:
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
-    step:
+    steps:
       # chekcout action의 3 버전을 Actions으로써 실행
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -50,7 +50,7 @@ jobs:
           # 기존 AWS EC2 서버에서 수행한 명령어 작성
           script: |
             cd sf
-            sudo docker stop fastapi
-            sudo docker rm fastapi
+            sudo docker stop fastapi || true
+            sudo docker rm fastapi || true
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/fastapi_app:latest
             sudo docker run -d -p 8000:8000 --name fastapi --env-file .env ${{ secrets.DOCKER_USERNAME }}/fastapi_app:latest
