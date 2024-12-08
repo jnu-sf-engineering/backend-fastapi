@@ -12,36 +12,17 @@ from router.openai_service import field_advice, summarize_sprint_content, summar
 # 회고록 라우터
 router = APIRouter(prefix="/v1/retrospects", tags=["회고록"])
 
-# KPT 요청 데이터 모델
-class KPTAnswer(BaseModel):
-    keep: Optional[str] = None
-    problem: Optional[str] = None
-    Try: Optional[str] = None
-
-# CSS 요청 데이터 모델
-class CSSAnswer(BaseModel):
-    Continue: Optional[str] = None
-    stop: Optional[str] = None
-    start: Optional[str] = None
-
-# 4LS 요청 데이터 모델
-class FourLSAnswer(BaseModel):
-    liked: Optional[str] = None
-    learned: Optional[str] = None
-    lacked: Optional[str] = None
-    loggedFor: Optional[str] = None
 
 # 공통 요청 모델
 class RetroRequest(BaseModel):
     retroId: int
     tempName: str
-    answer: Union[KPTAnswer, CSSAnswer, FourLSAnswer]
+    answer: Union[str, dict]
 
 
 # 조언 요청 모델
 class AdviceRequest(BaseModel):
     tempName: str
-    fieldName: str
     fieldValue: Optional[str] = None  
 
 # DB에서 특정 템플릿 데이터 조회 함수
@@ -64,12 +45,17 @@ def get_template_data(db: Session, retro_id: int, temp_name: str):
     return template_data
 
 
-# 공통 템플릿 필드 업데이트 함수
-def update_template_fields(template_data, answer: dict):
-    for key, value in answer.items():
-        # SQLAlchemy 모델 필드 이름에 정확히 맞추어 대문자로 변환
-        setattr(template_data, key.upper(), value)
-
+# # 공통 템플릿 필드 업데이트 함수
+# def update_template_fields(template_data, answer):
+#     if isinstance(answer, str):
+#         # 텍스트 형식의 answer를 통째로 저장
+#         setattr(template_data, "SUMMARY", answer)
+#     else:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail="updated_template_fields error"
+#         )
+        
 
 # 전체 회고 요약 업데이트 함수
 def update_project_summary(project_id: int, db: Session):
@@ -113,6 +99,55 @@ def update_project_summary(project_id: int, db: Session):
 
     db.commit()
 
+# 템플릿 내용(answer) 파싱하여 데이터 추출
+def parse_template(content: str, section_headers: dict) -> dict:
+    lines = content.splitlines()
+    current_section = None
+    parsed_data = {key: "" for key in section_headers.values()} 
+
+    for line in lines:
+        stripped_line = line.strip()
+        # 섹션 시작
+        for header, db_field in section_headers.items():
+            if stripped_line == header:
+                current_section = db_field
+                break
+
+        # 섹션 내용을 저장
+        if current_section and stripped_line and not stripped_line.startswith("##"):
+            parsed_data[current_section] += stripped_line + "\n"
+
+        # 섹션 종료
+        if stripped_line.startswith("## ") and stripped_line != header:
+            current_section = None
+
+    # 공백 제거
+    return {key: value.strip() for key, value in parsed_data.items()}
+
+
+
+# 파싱 함수(조언)
+def extract_section(content: str, section_header: str) -> str:
+    lines = content.splitlines()
+    section_found = False
+    section_content = []
+
+    for line in lines:
+        # 섹션 시작
+        if line.strip() == section_header:
+            section_found = True
+            continue
+        # 다음 섹션으로 이동
+        if section_found and line.startswith("## "):
+            break
+        # 현재 섹션의 내용을 수집
+        if section_found:
+            section_content.append(line.strip())
+    
+    extracted = "\n".join(section_content).strip()
+    return extracted
+
+
 # 회고 내용 업데이트
 @router.put("/", response_model=dict)
 async def update_retrospect(
@@ -134,16 +169,33 @@ async def update_retrospect(
             detail="Retrospect not found or access denied"
         )
 
+    # 템플릿별 섹션 정의
+    TEMPLATE_HEADERS = {
+        "KPT": {"## Keep": "KEEP", "## Problem": "PROBLEM", "## Try": "TRY"},
+        "CSS": {"## Continue": "CSS_CONTINUE", "## Stop": "CSS_STOP", "## Start": "CSS_START"},
+        "FOUR_LS": {"## Liked": "LIKED", "## Learned": "LEARNED", "## Lacked": "LACKED", "## LoggedFor": "LOGGED_FOR"}
+    }
+
+    if request.tempName not in TEMPLATE_HEADERS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid template name"
+        )
+
+
     # 템플릿별 처리 내용 수집: 스프린트 회고 요약에 사용
     template_data = get_template_data(db, request.retroId, request.tempName)
 
-    # Update template fields
-    update_template_fields(template_data, request.answer.dict(exclude_unset=True))
+    # 템플릿 파싱 및 필드 업데이트
+    section_headers = TEMPLATE_HEADERS[request.tempName]
+    parsed_data = parse_template(request.answer, section_headers)
+    for field, value in parsed_data.items():
+        setattr(template_data, field, value)
+
     db.commit()
 
-
-    contents = {field.lower(): getattr(template_data, field.upper()) for field in request.answer.dict()}
-    summary = summarize_sprint_content(request.tempName, contents)
+    # 요약 생성 및 업데이트
+    summary = summarize_sprint_content(request.tempName, parsed_data)
     if not summary:
         raise HTTPException(
             status_code=500,
@@ -271,12 +323,12 @@ async def get_retrospect_detail(
         answer = {
             "keep": retrospect.kpt.KEEP or "",
             "problem": retrospect.kpt.PROBLEM or "",
-            "try_": retrospect.kpt.TRY or "",
+            "Try": retrospect.kpt.TRY or "",
         }
     elif retrospect.css:
         temp_name = "CSS"
         answer = {
-            "continue_": retrospect.css.CSS_CONTINUE or "",
+            "Continue": retrospect.css.CSS_CONTINUE or "",
             "stop": retrospect.css.CSS_STOP or "",
             "start": retrospect.css.CSS_START or "",
         }
@@ -310,37 +362,40 @@ async def get_retrospect_detail(
 
 @router.post("/advice", response_model=dict)
 async def get_advice(request: AdviceRequest):
-    # 템플릿 유효성 검증
+    # 템플릿별 추출할 섹션 정의
     valid_templates = {
-        "KPT": ["keep", "problem", "try"],
-        "CSS": ["continue", "stop", "start"],
-        "FOUR_LS": ["liked", "learned", "lacked", "loggedFor"]
+        "KPT": "## Problem",
+        "CSS": "## Stop",
+        "FOUR_LS": "## Lacked"
     }
-    if request.tempName not in valid_templates:
+    section_header = valid_templates.get(request.tempName)
+    if not section_header:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid template name"
         )
 
-    if request.fieldName not in valid_templates[request.tempName]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid field name for {request.tempName} template"
-        )
-    
     # fieldValue 유효성 검증
     if not request.fieldValue or request.fieldValue.strip() == "":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="fieldValue cannot be empty"
         )
+    
+    # 섹션 추출
+    extracted_content = extract_section(request.fieldValue, section_header)
+    if not extracted_content:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"No content found under {section_header} section"
+        )
 
     # ChatGPT 조언
-    advice = field_advice(request.tempName, request.fieldName, request.fieldValue)
+    advice = field_advice(request.tempName, section_header, extracted_content)
     if not advice:
         raise HTTPException(
             status_code=500,
-            detail="Failed to generate advcie from OpenAI"
+            detail="Failed to generate advice from OpenAI"
         )
 
     response = {

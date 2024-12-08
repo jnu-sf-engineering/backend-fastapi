@@ -4,7 +4,7 @@ from typing import List, Optional
 
 
 # 모델 이름
-MODEL_NAME = "gpt-3.5-turbo"
+MODEL_NAME = "gpt-4o-mini"
 
 # Chatgpt API 사용
 client = OpenAI(api_key = settings.OPENAI_API_KEY)
@@ -12,11 +12,11 @@ client = OpenAI(api_key = settings.OPENAI_API_KEY)
 # 회고 필드 조언
 def field_advice(temp_name: str, field_name: str, field_value: str):
     try:
-        # 조언을 받을 필드만 허용
+        # 조언을 받을 필드와 섹션 헤더 정의
         valid_advice_fields = {
-            "KPT": ["problem"],
-            "CSS": ["stop"],
-            "FOUR_LS": ["lacked"]
+            "KPT": "## Problem",
+            "CSS": "## Stop",
+            "FOUR_LS": "## Lacked"
         }
 
         # 템플릿이 유효한지 확인
@@ -64,7 +64,7 @@ def field_advice(temp_name: str, field_name: str, field_value: str):
         prompt = (
             f"사용자는 '{temp_name}' 템플릿의 '{field_name}' 필드에 대해 다음과 같이 작성했어:\n"
             f"'{field_value}'\n\n"
-            "효과적인 회고를 위해 이 작성 내용을 개선하거나 보완할 수 있는 조언을 제공해줘."
+            "효과적인 회고를 위해 이 작성 내용을 개선하거나 보완할 수 있는 조언을 최대 5줄로 제공해줘."
         )
         
         messages = [
@@ -76,7 +76,8 @@ def field_advice(temp_name: str, field_name: str, field_value: str):
         response = client.chat.completions.create(
             model=MODEL_NAME,
             messages=messages,
-            temperature=0
+            temperature=0.3,
+            max_tokens=300
         )
         advice = response.choices[0].message.content
         return advice
@@ -114,7 +115,6 @@ def summarize_sprint_content(temp_name: str, contents: dict):
             {"role": "system", "content": "assistant는 사용자 회고 내용을 요약합니다."},
             {"role": "user", "content": prompt},
         ]
-        print(settings.OPENAI_API_KEY)
         # OpenAI API 호출
         response = client.chat.completions.create(
             model=MODEL_NAME,
