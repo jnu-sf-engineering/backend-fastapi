@@ -320,26 +320,43 @@ async def get_retrospect_detail(
     answer = {}
     if retrospect.kpt:
         temp_name = "KPT"
-        answer = {
-            "keep": retrospect.kpt.KEEP or "",
-            "problem": retrospect.kpt.PROBLEM or "",
-            "Try": retrospect.kpt.TRY or "",
-        }
+        answer = (
+            f"# {sprint.SPRINT_NAME} 회고록\n\n"
+            f"## Keep\n### 본 스프린트에서 잘된 점 또는 계속 유지해야 할 부분은 무엇인가요?\n"
+            f"{retrospect.kpt.KEEP or '-'}\n\n"
+            f"## Problem\n### 본 스프린트에서 문제점 또는 개선이 필요한 부분은 무엇인가요?\n"
+            f"{retrospect.kpt.PROBLEM or '-'}\n\n"
+            f"## Try\n### 본 스프린트에서 시도해보고 싶은 새로운 아이디어나 방법은 무엇인가요?\n"
+            f"{retrospect.kpt.TRY or '-'}"
+        )
     elif retrospect.css:
         temp_name = "CSS"
-        answer = {
-            "Continue": retrospect.css.CSS_CONTINUE or "",
-            "stop": retrospect.css.CSS_STOP or "",
-            "start": retrospect.css.CSS_START or "",
-        }
+        answer = (
+            f"# {sprint.SPRINT_NAME} 회고록\n\n"
+            f"## Continue\n### 프로젝트에 좋은 영향을 끼쳤거나 계속 유지하고 싶은 행동은 무엇이었나요?\n"
+            f"{retrospect.css.CSS_CONTINUE or '-'}\n\n"
+            f"## Stop\n### 프로젝트에 부정적인 영향을 주거나 비효율적인 행동은 무엇이었나요?\n"
+            f"{retrospect.css.CSS_STOP or '-'}\n\n"
+            f"## Start\n### 개선에 필요한 행동을 작성해주세요!\n"
+            f"{retrospect.css.CSS_START or '-'}"
+        )
     elif retrospect.four_ls:
         temp_name = "FOUR_LS"
-        answer = {
-            "liked": retrospect.four_ls.LIKED or "",
-            "learned": retrospect.four_ls.LEARNED or "",
-            "lacked": retrospect.four_ls.LACKED or "",
-            "loggedFor": retrospect.four_ls.LOGGED_FOR or "",
-        }
+        answer = (
+            f"# {sprint.SPRINT_NAME} 회고록\n\n"
+            f"## Liked\n### 프로젝트를 진행하며 좋았던 부분과 그 이유는 무엇인가요?\n"
+            f"{retrospect.four_ls.LIKED or '-'}\n\n"
+            f"### 남은 프로젝트 동안 지속되었으면 하는 것은 무엇인가요?\n"
+            f"{retrospect.four_ls.LIKED_EXTRA or '-'}\n\n"
+            f"## Learned\n### 프로젝트를 진행하며 배운 점은 무엇인가요?\n"
+            f"{retrospect.four_ls.LEARNED or '-'}\n\n"
+            f"## Laked\n### 프로젝트 진행중 본인 또는 팀이 부족했던 점을 작성해주세요\n"
+            f"{retrospect.four_ls.LACKED or '-'}\n\n"
+            f"## Logged For\n### 프로젝트에서 희망하는 점을 작성해주세요\n"
+            f"{retrospect.four_ls.LOGGED_FOR or '-'}\n\n"
+            f"### 프로젝트에서 얻어가고 싶은 점을 작성해주세요\n"
+            f"{retrospect.four_ls.LOGGED_FOR_EXTRA or '-'}"
+        )
     else:
         raise HTTPException(
             status_code=500,
@@ -352,7 +369,7 @@ async def get_retrospect_detail(
         "response": {
             "sprintName": sprint.SPRINT_NAME,
             "tempName": temp_name,
-            "answer": answer
+            "answer": answer.strip()
         },
         "error": None
     }
