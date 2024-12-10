@@ -365,7 +365,7 @@ async def get_retrospect_detail(
             status_code=500,
             detail="No template data found for the given retrospect."
         )
-
+    
     # 응답 데이터 구성
     response = {
         "success": True,
