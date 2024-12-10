@@ -315,6 +315,9 @@ async def get_retrospect_detail(
             detail="Sprint data is missing for the given retrospect."
         )
 
+    # Retrospect의 SUMMARY 값
+    summary_data = retrospect.SUMMARY
+
     # 템플릿별 데이터 구성
     temp_name = ""
     answer = {}
@@ -369,7 +372,8 @@ async def get_retrospect_detail(
         "response": {
             "sprintName": sprint.SPRINT_NAME,
             "tempName": temp_name,
-            "answer": answer.strip()
+            "answer": answer.strip(),
+            "retro": summary_data
         },
         "error": None
     }
