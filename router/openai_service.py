@@ -108,6 +108,7 @@ def summarize_sprint_content(temp_name: str, contents: dict):
             f"템플릿 설명: {template_description}\n\n"
             "이 회고 내용을 바탕으로 요약을 작성해주세요. "
             "요약은 간결하고 중요한 점을 포함해주세요."
+            "반환된 텍스트는 반드시 텍스트로만 구성되고, 줄바꿈은 한 번만 사용해주세요. 즉, \\n\\n이 아닌 필요할 때 \\n을 사용하는 것입니다."
         )
 
         # OpenAI 메시지 구성
@@ -146,6 +147,7 @@ def summarize_project_retrospects(summaries: List[str]):
             f"{combined_text}\n\n"
             "이 모든 회고 내용을 바탕으로 프로젝트 전체를 요약해주세요. "
             "요약은 3~5문장으로 간결하고 중요한 점만 포함해주세요."
+            "반환된 텍스트는 반드시 텍스트로만 구성되고, 줄바꿈은 한 번만 사용해주세요. 즉, \\n\\n이 아닌 필요할 때 \\n을 사용하는 것입니다."
         )
 
         # OpenAI 메시지 구성
