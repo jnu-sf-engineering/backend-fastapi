@@ -65,6 +65,7 @@ def field_advice(temp_name: str, field_name: str, field_value: str):
             f"사용자는 '{temp_name}' 템플릿의 '{field_name}' 필드에 대해 다음과 같이 작성했어:\n"
             f"'{field_value}'\n\n"
             "효과적인 회고를 위해 이 작성 내용을 개선하거나 보완할 수 있는 조언을 최대 5줄로 제공해줘."
+            "반환된 텍스트는 반드시 텍스트로만 구성되고, 줄바꿈은 한 번만 사용해주세요. 즉, \\n\\n이 아닌 필요할 때 \\n을 사용하는 것입니다."
         )
         
         messages = [
