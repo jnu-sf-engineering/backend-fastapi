@@ -62,7 +62,7 @@ class Card(Base):
     __tablename__ = "CARD"
 
     CARD_ID = Column(BigInteger, primary_key=True, autoincrement=True)
-    SPRINT_ID = Column(BigInteger, ForeignKey("PROJECT.PROJECT_ID", ondelete="CASCADE"), nullable=False)
+    SPRINT_ID = Column(BigInteger, ForeignKey("SPRINT.SPRINT_ID", ondelete="CASCADE"), nullable=False)
     CARD_CONTENT = Column(String(255), nullable=False)
     CARD_PARTICIPANTS = Column(String(255), nullable=False)
     CARD_STATUS = Column(Integer, nullable=False)
