@@ -54,7 +54,7 @@ jobs:
         env:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          DB_URL: mysql+pymysql://${{ secrets.RDS_DATABASE_USERNAME }}:${{ secrets.RDS_DATABASE_PASSWORD }}@127.0.0.1:3306/${{ secrets.RDS_DB_NAME }}?charset=utf8mb4
+          DB_URL: mysql+pymysql://${{ secrets.RDS_DATABASE_USERNAME }}:${{ secrets.RDS_DATABASE_PASSWORD }}@${{ secrets.RDS_DATABASE_ENDPOINT }}:${{ secrets.RDS_PORT }}/${{ secrets.RDS_DB_NAME }}?charset=utf8mb4
         run: pytest test/ci_test.py --disable-warnings
 
   build-and-push:
