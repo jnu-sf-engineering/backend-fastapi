@@ -30,7 +30,7 @@ jobs:
 
       # MySQL 구성까지 기다리기
       - name: Wait for MySQL to be ready
-        run: sleep 15
+        run: sleep 30
       
       # 데이터베이스 테이블 구성(초기 구성)
       - name: Initialize Database Schema
@@ -48,13 +48,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      
+      # .env 파일 확인
+      - name: Verify .env File
+        run: cat .env
 
       # 테스트 진행
       - name: Run Pytest
         env:
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          DB_URL: mysql+pymysql://${{ secrets.RDS_DATABASE_USERNAME }}:${{ secrets.RDS_DATABASE_PASSWORD }}@${{ secrets.RDS_DATABASE_ENDPOINT }}:${{ secrets.RDS_PORT }}/${{ secrets.RDS_DB_NAME }}?charset=utf8mb4
+          DOTENV_PATH: ".env"
         run: pytest test/ci_test.py --disable-warnings
 
   build-and-push:
