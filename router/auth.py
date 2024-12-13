@@ -32,6 +32,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str 
     nickname: str 
+    discord: str
 
 # 로그인 요청 검증
 class LoginRequest(BaseModel):
@@ -84,7 +85,8 @@ async def register_user(request: RegisterRequest, db: Session = Depends(get_db))
     new_user = User(
         EMAIL=request.email,
         PASSWORD=hashed_password,
-        NICKNAME=request.nickname
+        NICKNAME=request.nickname,
+        DISCORD=request.discord
         )
     db.add(new_user)
     db.commit()
