@@ -48,15 +48,30 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
-      # .env 파일 확인
-      - name: Verify .env File
-        run: cat .env
 
+      # 환경변수 확인
+      - name: Debug Environment Variables
+        run: |
+          echo "DB_URL=$DB_URL"
+          echo "RDS_DATABASE_USERNAME=$RDS_DATABASE_USERNAME"
+          echo "RDS_DATABASE_PASSWORD=$RDS_DATABASE_PASSWORD"
+          echo "RDS_DB_NAME=$RDS_DB_NAME"
+          echo "RDS_DATABASE_ENDPOINT=$RDS_DATABASE_ENDPOINT"
+          echo "RDS_PORT=$RDS_PORT"
+        env:
+          DB_URL: mysql+pymysql://${{ secrets.RDS_DATABASE_USERNAME }}:${{ secrets.RDS_DATABASE_PASSWORD }}@127.0.0.1:3306/${{ secrets.RDS_DB_NAME }}?charset=utf8mb4
+          RDS_DATABASE_USERNAME: ${{ secrets.RDS_DATABASE_USERNAME }}
+          RDS_DATABASE_PASSWORD: ${{ secrets.RDS_DATABASE_PASSWORD }}
+          RDS_DB_NAME: ${{ secrets.RDS_DB_NAME }}
+          RDS_DATABASE_ENDPOINT: ${{ secrets.RDS_DATABASE_ENDPOINT }}
+          RDS_PORT: ${{ secrets.RDS_PORT }}
+      
       # 테스트 진행
       - name: Run Pytest
         env:
-          DOTENV_PATH: ".env"
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DB_URL: mysql+pymysql://${{ secrets.RDS_DATABASE_USERNAME }}:${{ secrets.RDS_DATABASE_PASSWORD }}@${{ secrets.RDS_DATABASE_ENDPOINT }}:${{ secrets.RDS_PORT }}/${{ secrets.RDS_DB_NAME }}?charset=utf8mb4
         run: pytest test/ci_test.py --disable-warnings
 
   build-and-push:
