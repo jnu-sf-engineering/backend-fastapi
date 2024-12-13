@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 from main import app
 from db.models import Sprint
 from db.database import SessionLocal
+from core.config import settings
 
 class TestAPI:
     # 테스트 진행에 필요한 데이터 세팅
@@ -22,7 +23,8 @@ class TestAPI:
         cls.test_user = {
             "email": "test@example.com",
             "password": "password123",
-            "nickname": "tester"
+            "nickname": "tester",
+            "discord" : f"{settings.DISCORD_WEBHOOK_URL}"
         }
         cls.test_project = {
             "projectName": None,

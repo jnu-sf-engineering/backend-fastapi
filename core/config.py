@@ -12,6 +12,9 @@ class Settings:
     # OpenAI
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
+    # Discord(테스트 과정에서만 사용)
+    DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+
     # MySQL
     RDS_DATABASE_ENDPOINT = os.getenv("RDS_DATABASE_ENDPOINT")
     RDS_DATABASE_USERNAME = os.getenv("RDS_DATABASE_USERNAME")

@@ -1,12 +1,14 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Union, Optional
 from sqlalchemy.orm import Session, joinedload
 from db.database import get_db
-from db.models import Retrospect, KPT, CSS, FourLs, Sprint, Project, Summary
+from db.models import Retrospect, KPT, CSS, FourLs, Sprint, Project, Summary, User
 from router.token_decode import get_user_id_from_token
 from router.openai_service import field_advice, summarize_sprint_content, summarize_project_retrospects
+from discord_webhook import DiscordWebhook, DiscordEmbed
+import requests
 
 
 # 회고록 라우터
@@ -43,18 +45,6 @@ def get_template_data(db: Session, retro_id: int, temp_name: str):
             detail=f"{temp_name} data not found"
         )
     return template_data
-
-
-# # 공통 템플릿 필드 업데이트 함수
-# def update_template_fields(template_data, answer):
-#     if isinstance(answer, str):
-#         # 텍스트 형식의 answer를 통째로 저장
-#         setattr(template_data, "SUMMARY", answer)
-#     else:
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail="updated_template_fields error"
-#         )
         
 
 # 전체 회고 요약 업데이트 함수
@@ -206,6 +196,27 @@ async def update_retrospect(
     db.commit()
 
     update_project_summary(retrospect.sprint.PROJECT_ID, db)
+
+    # 회고록 작성 후 Discord를 이용한 메시지 전송
+    user_discord = db.query(User.DISCORD).filter(User.USER_ID == user_id).scalar()
+    sprint_name = retrospect.sprint.SPRINT_NAME
+    if user_discord:
+        try:
+            webhook = DiscordWebhook(url=user_discord)
+            embed = DiscordEmbed(
+                title="회고록 작성 완료!",
+                description=f"'{sprint_name}'의 회고록 작성이 완료되었습니다.",
+                color=242424
+            )
+            embed.set_footer(text="momentum")
+            embed.set_timestamp()
+            webhook.add_embed(embed)
+            webhook.execute()
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to send Discord notification: {e}"
+            )
 
     response = {
         "success": True,

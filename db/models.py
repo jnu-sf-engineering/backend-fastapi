@@ -14,6 +14,7 @@ class User(Base):
     EMAIL = Column(String(255), nullable=False, unique=True)
     PASSWORD = Column(String(255), nullable=False)
     NICKNAME = Column(String(255), nullable=False)
+    DISCORD = Column(String(255), nullable=False)
 
     projects = relationship("Project", back_populates="user", cascade="all, delete-orphan")
 
