@@ -71,6 +71,7 @@ jobs:
         env:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           RDS_DATABASE_ENDPOINT: ${{ secrets.RDS_DATABASE_ENDPOINT }}
           RDS_DATABASE_USERNAME: ${{ secrets.RDS_DATABASE_USERNAME }}
           RDS_DATABASE_PASSWORD: ${{ secrets.RDS_DATABASE_PASSWORD }}
